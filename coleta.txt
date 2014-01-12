@@ -1,0 +1,65 @@
+{
+    "System": {
+        "classeWMI": {
+            "Win32_BaseBoard": {
+                "label": "Win32_BaseBoard",
+                "classeAtributos": {
+                    "Caption": "Placa Base",
+                    "Description": "Placa Base",
+                    "Manufacturer": "asus" 
+                }
+            }
+        }
+    },
+    "data_coleta": "14/10/2013"
+}
+
+Geral
+Win32_ComputerSystem: principal
+    Caption;
+    Domain;
+    UserName?;
+Win32_NetworkAdapterConfiguration
+    IPAddress;
+    MACAddress;
+Win32_OperatingSystem
+    Caption;
+    CSDVersion;
+
+Hardware
+
+Win32_Keyboard
+    Manufacturer;
+    Name; 
+Win32_PointingDevice
+    Manufacturer;
+    Name; 
+Win32_PhysicalMedia
+    Name;
+    Status;
+    Manufacturer;
+    Capacity;
+Win32_BaseBoard
+    Manufacturer;
+    Model;
+    Name;
+Win32_PhysicalMemory
+    Capacity;
+    Manufacturer;
+Win32_Processor
+    Architecture;
+    Manufacturer;
+    Name;
+    NumberOfCores?;
+Win32_Printer
+    Name;
+    Network;
+    ServerName?;
+    Shared;
+Win32_DesktopMonitor
+    DisplayType?;
+    MonitorManufacturer?;
+    MonitorType?;
+    Name;
+    ScreenHeight?;
+    ScreenWidth?;
