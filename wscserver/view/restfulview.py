@@ -35,9 +35,10 @@ class CustomRESTfulView(RESTfulView):
             classes = {}
 
             # Gera um hash para o id_computador
+            salt = str('salthere').encode('utf-8')
             id_reg = str(computador).encode('utf-8')
             id_reg = hashlib.sha512(id_reg)
-            id_reg.update('salthere')
+            id_reg.update(salt)
             id_reg = id_reg.hexdigest()
             classes['id_reg'] = id_reg
 
