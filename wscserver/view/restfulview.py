@@ -17,6 +17,7 @@ class CustomRESTfulView(RESTfulView):
 
         saida = {}
         results = []
+
         for computador in dados_banco:
             # Cria as chaves dos computadores
             saida[computador['id_computador']] = {}
@@ -27,8 +28,9 @@ class CustomRESTfulView(RESTfulView):
 
         for x in dados_banco:
             # cria as chaves de propriedades nas classes
+            class_name = x['nm_class_name']
             saida[x['id_computador']][x['nm_class_name']][
-                    x['nm_property_name']] = x['te_class_property_value']
+                 class_name +'_'+  x['nm_property_name']] = x['te_class_property_value']
 
         # Ordena os objetos json
         for computador in saida:
@@ -49,11 +51,27 @@ class CustomRESTfulView(RESTfulView):
 
             results.append(classes)
 
-
         valores = {
             'results': results,
             'result_count': len(results)
         }
+
+        results = valores['results']
+        for computador in results:
+
+            SoftwareList = computador['SoftwareList']
+            new_SoftwareList = [ ]
+
+            for soft_key, soft_value in SoftwareList.items():
+
+                new_SoftwareList_element = {
+                    'name': soft_key,
+                    'value': soft_value
+                }
+                new_SoftwareList.append(new_SoftwareList_element)
+
+            computador['SoftwareList'] = new_SoftwareList
+
 
         response_data = dict(
             body=json.dumps(valores),
