@@ -5,7 +5,7 @@ from sqlalchemy.engine import create_engine
 from pyramid import config
 from paste.deploy.loadwsgi import appconfig
 
-sqlalchemy_url = 'postgresql://rest:rest@localhost/cacic'
+sqlalchemy_url = 'postgresql://eduardo@localhost/cacic'
 DBSession = scoped_session(sessionmaker())
 Base = declarative_base()
 engine = create_engine(sqlalchemy_url)
