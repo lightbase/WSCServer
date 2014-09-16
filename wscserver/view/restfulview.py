@@ -65,8 +65,7 @@ class CustomRESTfulView(RESTfulView):
             for soft_key, soft_value in SoftwareList.items():
 
                 new_SoftwareList_element = {
-                    'name': soft_key,
-                    'value': soft_value
+                    'softwarelist_name': soft_value
                 }
                 new_SoftwareList.append(new_SoftwareList_element)
 
