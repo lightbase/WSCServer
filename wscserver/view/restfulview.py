@@ -68,15 +68,21 @@ class CustomRESTfulView(RESTfulView):
                 property_ = collection_element.nm_property_name
                 property_value = collection_element.te_class_property_value
 
-                if class_ not in self.computer_filter:
-                    # Filter classes
+                if class_ == 'SoftwareList':
+                    if computer.get(class_) is None:
+                        computer[class_] = [ ]
+                    elif property_value.lower().find('office') > -1:
+                        computer[class_].append(property_value)
+                    elif property_value.lower().find('microsoft') > -1:
+                        computer[class_].append(property_value)
                     continue
 
-                if property_ not in self.computer_filter[class_]:
-                    # Filter properties 
+                elif class_ not in self.computer_filter \
+                    or property_ not in self.computer_filter[class_]:
+                    # Filter classes and properties 
                     continue
 
-                if computer.get(class_) is None:
+                elif computer.get(class_) is None:
                     computer[class_] = { }
                 else:
                     prefixed_property = class_ + '_' + property_
