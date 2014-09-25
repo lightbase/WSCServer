@@ -2,6 +2,7 @@ from pyramid_restler.view import RESTfulView
 from collections import defaultdict
 import json
 import hashlib
+from itertools import groupby
 
 class CustomRESTfulView(RESTfulView):
 
@@ -10,71 +11,93 @@ class CustomRESTfulView(RESTfulView):
     para as classes WMI
     """
 
-    def render_json(self, value):
+    # Computer class and properties filters
+    computer_filter = {
+        "OperatingSystem": [
+            "Caption",
+            "Version",
+            "InstallDate",
+            # quantidade ???
+        ],
+        "Win32_Processor": [
+            "Manufacturer",
+            "Caption",
+            "NumberOfLogicalProcessors",
+            # idade ??
+        ],
+        "Win32_BIOS": [
+            "Manufacturer",
+        ],
+    }
 
-        dados_banco = json.loads(self.context.to_json(value, self.fields,
-                                 wrap=False))
+    def render_json(self, collection):
 
-        saida = {}
-        results = []
+        """
+        :param collection: List of <wscserver.model.Coleta.Coleta object>
+        collection element attributes example:
 
-        for computador in dados_banco:
-            # Cria as chaves dos computadores
-            saida[computador['id_computador']] = {}
+        "id_class": 3,
+        "id_computador_coleta_historico": 1,
+        "nm_class_name": "NetworkAdapterConfiguration",
+        "nm_property_name": "Description",
+        "id_computador_coleta": 1,
+        "id_class_property": 6,
+        "dt_hr_inclusao": "2014-07-18 12:34:43",
+        "id_computador": 3,
+        "te_class_property_value": " "Intel(R) 82579V Gigabit Network Connection"
+        """
 
-        for computador in dados_banco:
-            # Cria as chaves de classes nos computadores
-            saida[computador['id_computador']][computador['nm_class_name']] = {}
+        def keyfunc(obj):
+            # Will group by computer ID
+            return int(obj.id_computador)
 
-        for x in dados_banco:
-            # cria as chaves de propriedades nas classes
-            class_name = x['nm_class_name']
-            saida[x['id_computador']][x['nm_class_name']][
-                 class_name +'_'+  x['nm_property_name']] = x['te_class_property_value']
+        # Sort list before grouping
+        collection = sorted(collection, key=keyfunc)
 
-        # Ordena os objetos json
-        for computador in saida:
-            classes = {}
+        # Create result list
+        computers = [ ]
 
-            # Gera um hash para o id_computador
-            salt = str('salthere').encode('utf-8')
-            id_reg = str(computador).encode('utf-8')
-            id_reg = hashlib.sha512(id_reg)
-            id_reg.update(salt)
-            id_reg = id_reg.hexdigest()
-            classes['id_reg'] = id_reg
+        # Navigate groups
+        for id_computador, computer_group in groupby(collection, keyfunc):
 
-            for classe in saida[computador]:
-                if classe != 'data_coleta':
-                    # Aqui estou nas classes
-                    classes[classe] = saida[computador][classe]
+            computer = { }
 
-            results.append(classes)
+            for collection_element in list(computer_group):
 
-        valores = {
-            'results': results,
-            'result_count': len(results)
+                class_ = collection_element.nm_class_name
+                property_ = collection_element.nm_property_name
+                property_value = collection_element.te_class_property_value
+
+                if class_ == 'SoftwareList':
+                    if computer.get(class_) is None:
+                        computer[class_] = [ ]
+                    elif property_value.lower().find('office') > -1:
+                        computer[class_].append(property_value)
+                    elif property_value.lower().find('microsoft') > -1:
+                        computer[class_].append(property_value)
+                    continue
+
+                elif class_ not in self.computer_filter \
+                    or property_ not in self.computer_filter[class_]:
+                    # Filter classes and properties 
+                    continue
+
+                elif computer.get(class_) is None:
+                    computer[class_] = { }
+                else:
+                    prefixed_property = class_ + '_' + property_
+                    computer[class_][prefixed_property] = property_value
+
+            computers.append(computer)
+
+        response = {
+            'results': computers,
+            'result_count': len(computers)
         }
 
-        results = valores['results']
-        for computador in results:
-
-            SoftwareList = computador['SoftwareList']
-            new_SoftwareList = [ ]
-
-            for soft_key, soft_value in SoftwareList.items():
-
-                new_SoftwareList_element = {
-                    'name': soft_key,
-                    'value': soft_value
-                }
-                new_SoftwareList.append(new_SoftwareList_element)
-
-            computador['SoftwareList'] = new_SoftwareList
-
-
-        response_data = dict(
-            body=json.dumps(valores),
+        return dict(
+            body=json.dumps(response),
             content_type='application/json'
         )
-        return response_data
+
+
