@@ -1,9 +1,7 @@
 import json
-import hashlib
-
 from pyramid.response import Response
 from wscserver.model import session
-
+import zipfile
 
 FILE_BEGIN = '{"results":['
 FILE_END = '], "result_count": %s}'
@@ -33,20 +31,19 @@ FILTER_KEYS = str(tuple(COMPUTER_FILTER.keys()))
 
 def viewcoleta(request):
 
-    #create index idx_id_computador on computador_coleta(id_computador);
+    # Please ensure this index exists on database
+    # CREATE INDEX idx_id_computador ON computador_coleta(id_computador);
 
     limit = request.params.get('limit', 'NULL')
 
     stmt1 = """
-        SELECT 
-            id_computador 
+        SELECT id_computador 
         FROM computador_coleta 
         GROUP BY id_computador
         LIMIT {};
-    """.format(limit)
+        """.format(limit)
 
     computer_ids = session.execute(stmt1)
-
 
     stmt2 = """
         SELECT classe.nm_class_name,
@@ -56,7 +53,7 @@ def viewcoleta(request):
             INNER JOIN class_property as cp ON (cc.id_class_property =
                 cp.id_class_property)
             INNER JOIN classe ON (classe.id_class = cp.id_class)
-            WHERE cc.id_computador = {} AND
+        WHERE cc.id_computador = {} AND
             classe.nm_class_name IN {};
         """
 
@@ -80,13 +77,22 @@ def viewcoleta(request):
 
         f.write(FILE_END % computer_ids.rowcount)
 
-    return Response('ok')
-   #return Response(
-   #    content_type='application/json',
-   #    content_disposition='filename=coleta.json',
-   #    app_iter=[open('/var/antony/coleta.json', 'rb').read()]
-   #)
+    if '1' in tuple(request.params.get('zip')):
 
+        with zipfile.ZipFile('/tmp/coleta.zip', 'w') as myzip:
+            myzip.write('/tmp/coleta.json')
+
+        return Response(
+           content_type='application/zip',
+           content_disposition='filename=coleta.zip',
+           body_file=open('/tmp/coleta.zip', 'rb'))
+    else:
+        return Response(
+           content_type='application/json',
+           content_disposition='filename=coleta.json',
+           body_file=open('/tmp/coleta.json'))
+
+    return Response('ok')
 
 
 def build_computer_json(computer_group):
@@ -116,34 +122,3 @@ def build_computer_json(computer_group):
 
     return json.dumps(computer)
 
-def zipcoleta():
-    """Recebe o json da coleta em um arquivo e zipa"""
-    coleta = requests.get('http://localhost/wscserver/rest/coleta')
-
-    tmpdir = tempfile.gettempdir()
-    os.chdir(tmpdir)
-    f = open('coleta.json','r')
-    arquivozip = 'coleta.zip'
-    with zipfile.ZipFile(arquivozip, 'w') as myzip:
-        myzip.write(f.name)
-    f.close()
-    os.remove('coleta.json')
-    filepath = os.path.abspath(arquivozip)
-    return filepath
-'''
-def zipcoleta():
-    """Recebe o json da coleta em um arquivo e zipa"""
-    coleta = requests.get('http://localhost/wscserver/rest/coleta')
-
-    path = tempfile.gettempdir()
-    os.chdir(path)
-    f = open('coleta.json','w')
-    f.write(coleta.text)
-    arquivozip = 'coleta.zip'
-    with zipfile.ZipFile(arquivozip, 'w') as myzip:
-        myzip.write(f.name)
-    f.close()
-    os.remove('coleta.json')
-    filepath = os.path.abspath(arquivozip)
-    return filepath
-'''
