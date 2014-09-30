@@ -34,7 +34,7 @@ def viewcoleta(request):
     # Please ensure this index exists on database
     # CREATE INDEX idx_id_computador ON computador_coleta(id_computador);
 
-    limit = request.params.get('limit', 'NULL')
+    limit = request.params.get('limit', '10').upper()
 
     stmt1 = """
         SELECT id_computador 
@@ -77,7 +77,7 @@ def viewcoleta(request):
 
         f.write(FILE_END % computer_ids.rowcount)
 
-    if '1' in tuple(request.params.get('zip')):
+    if '1' in tuple(request.params.get('zip', '0')):
 
         with zipfile.ZipFile('/tmp/coleta.zip', 'w') as myzip:
             myzip.write('/tmp/coleta.json')
