@@ -5,15 +5,27 @@ from sqlalchemy.engine import create_engine
 from pyramid import config
 from paste.deploy.loadwsgi import appconfig
 
-sqlalchemy_url = 'postgresql://eduardo@localhost/cacic'
-DBSession = scoped_session(sessionmaker())
-Base = declarative_base()
-engine = create_engine(sqlalchemy_url)
-Session = sessionmaker(bind=engine)
-session = Session()
+def initialize_sql(settings):
 
+    global DBSession
+    global sqlalchemy_url
+    global DBSession
+    global Base
+    global engine
+    global Session
+    global session
 
-def initialize_sql(engine):
+    sqlalchemy_url = settings['sqlalchemy.url']
+    DBSession = scoped_session(sessionmaker())
+    Base = declarative_base()
+    engine = create_engine(sqlalchemy_url)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine
     # Base.metadata.create_all(engine)
+
+
+
+
