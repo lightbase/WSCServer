@@ -52,10 +52,8 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+# Arquivos de configuração
+*.ini
+
 # Ignore pycharm
 .idea/
-
-# ignore config files
-development.ini
-production.ini
-wscserver.wsgi
