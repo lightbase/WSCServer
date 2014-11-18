@@ -54,6 +54,7 @@ docs/_build/
 
 # Arquivos de configuração
 *.ini
+*.wsgi
 
 # Ignore pycharm
 .idea/

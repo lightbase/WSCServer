@@ -2,6 +2,8 @@ import json
 from pyramid.response import Response
 from wscserver.model import session
 import zipfile
+import re
+from logging import getLogger
 
 FILE_BEGIN = '{"results":['
 FILE_END = '], "result_count": %s}'
@@ -11,22 +13,33 @@ COMPUTER_FILTER = {
     "OperatingSystem": [
         "Caption",
         "Version",
-        "InstallDate",
-        # quantidade ???
+        "InstallDate"
     ],
     "Win32_Processor": [
         "Manufacturer",
         "Caption",
         "NumberOfLogicalProcessors",
-        # idade ??
+        "MaxClockSpeed",
+        "Family"
     ],
     "Win32_BIOS": [
         "Manufacturer",
+    ],
+    "Win32_PhysicalMemory": [
+        "MemoryType",
+        "Capacity"
+    ],
+    "Win32_LogicalDisk": [
+        "Caption",
+        "MediaType",
+        "Size"
     ],
     "SoftwareList": []
 }
 
 FILTER_KEYS = str(tuple(COMPUTER_FILTER.keys()))
+
+log = getLogger()
 
 
 def viewcoleta(request):
@@ -101,8 +114,16 @@ def build_computer_json(computer_group):
         "OperatingSystem": {},
         "Win32_Processor": {},
         "Win32_BIOS": {},
+        "Win32_PhysicalMemory": {},
+        "Win32_LogicalDisk": {},
         "SoftwareList": []
     }
+
+    # FIXME: Arrumar uma forma melhor de definir os atributos que devem ser somados
+    somar = [
+        "NumberOfLogicalProcessors",
+        "Capacity"
+    ]
 
     for class_, property_, property_value in computer_group:
 
@@ -118,6 +139,22 @@ def build_computer_json(computer_group):
 
         else:
             prefixed_property = class_ + '_' + property_
+
+            # Fix no valor da propriedade quando mutivalorado
+            p = property_value.split("[[REG]]")
+            if type(p) == list and len(p) > 0:
+                saida = int()
+                for value in p:
+                    if value.isdigit():
+                        if property_ in somar:
+                            log.debug(value)
+                            saida += int(value)
+                        else:
+                            saida = int(value)
+                    else:
+                        saida = value
+                property_value = saida
+
             computer[class_][prefixed_property] = property_value
 
     return json.dumps(computer)

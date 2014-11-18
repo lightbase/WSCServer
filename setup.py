@@ -17,7 +17,8 @@ requires = [
     'psycopg2',
     'pyramid_restler',
     'requests',
-    'chameleon'
+    'chameleon',
+    'ConfigParser'
 ]
 
 setup(name='WSCServer',
