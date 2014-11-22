@@ -46,26 +46,32 @@ def viewcoleta(request):
 
     # Please ensure this index exists on database
     # CREATE INDEX idx_id_computador ON computador_coleta(id_computador);
-
-    limit = request.params.get('limit', '10').upper()
-
-    stmt1 = """
-        SELECT id_computador 
-        FROM computador_coleta 
-        GROUP BY id_computador
-        LIMIT {};
-        """.format(limit)
+    if request.params.get('limit') is None:
+        stmt1 = """
+        SELECT id_computador
+        FROM computador_coleta
+        GROUP BY id_computador;
+        """
+    else:
+        stmt1 = """
+            SELECT id_computador
+            FROM computador_coleta
+            GROUP BY id_computador
+            LIMIT {};
+            """.format(request.params.get('limit'))
 
     computer_ids = session.execute(stmt1)
 
     stmt2 = """
         SELECT classe.nm_class_name,
                cp.nm_property_name,
-               cc.te_class_property_value
+               cc.te_class_property_value,
+               pr.display_name
         FROM computador_coleta AS cc
             INNER JOIN class_property as cp ON (cc.id_class_property =
                 cp.id_class_property)
             INNER JOIN classe ON (classe.id_class = cp.id_class)
+            LEFT JOIN proriedade_software pr ON (cp.id_class_property = pr.id_class_property)
         WHERE cc.id_computador = {} AND
             classe.nm_class_name IN {};
         """
@@ -111,12 +117,12 @@ def viewcoleta(request):
 def build_computer_json(computer_group):
 
     computer = {
-        "OperatingSystem": {},
-        "Win32_Processor": {},
-        "Win32_BIOS": {},
-        "Win32_PhysicalMemory": {},
-        "Win32_LogicalDisk": {},
-        "SoftwareList": []
+        "OperatingSystem".lower(): {},
+        "Win32_Processor".lower(): {},
+        "Win32_BIOS".lower(): {},
+        "Win32_PhysicalMemory".lower(): {},
+        "Win32_LogicalDisk".lower(): {},
+        "SoftwareList".lower(): []
     }
 
     # FIXME: Arrumar uma forma melhor de definir os atributos que devem ser somados
@@ -125,13 +131,13 @@ def build_computer_json(computer_group):
         "Capacity"
     ]
 
-    for class_, property_, property_value in computer_group:
+    for class_, property_, property_value, display_name in computer_group:
 
-        if class_ == 'SoftwareList':
-            if property_value.lower().find('office') > -1:
-                computer[class_].append(property_value)
-            elif property_value.lower().find('microsoft') > -1:
-                computer[class_].append(property_value)
+        if class_ == 'SoftwareList'.lower():
+            if display_name.lower().find('office') > -1:
+                computer[class_.lower()].append(display_name)
+            #elif property_.lower().find('microsoft') > -1:
+            #    computer[class_].append(property_)
             continue
 
         elif property_ not in COMPUTER_FILTER[class_]:
@@ -155,7 +161,7 @@ def build_computer_json(computer_group):
                         saida = value
                 property_value = saida
 
-            computer[class_][prefixed_property] = property_value
+            computer[class_.lower()][prefixed_property.lower()] = property_value
 
     return json.dumps(computer)
 
