@@ -71,7 +71,7 @@ def viewcoleta(request):
             INNER JOIN class_property as cp ON (cc.id_class_property =
                 cp.id_class_property)
             INNER JOIN classe ON (classe.id_class = cp.id_class)
-            LEFT JOIN proriedade_software pr ON (cp.id_class_property = pr.id_class_property)
+            LEFT JOIN proriedade_software pr ON (cp.id_class_property = pr.id_class_property AND cc.id_computador = pr.id_computador)
         WHERE cc.id_computador = {} AND
             classe.nm_class_name IN {};
         """
