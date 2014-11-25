@@ -14,6 +14,7 @@ def initialize_sql(settings):
     global engine
     global Session
     global session
+    global tmp_dir
 
     sqlalchemy_url = settings['sqlalchemy.url']
     DBSession = scoped_session(sessionmaker())
@@ -21,6 +22,7 @@ def initialize_sql(settings):
     engine = create_engine(sqlalchemy_url)
     Session = sessionmaker(bind=engine)
     session = Session()
+    tmp_dir = settings['tmp_dir']
 
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine

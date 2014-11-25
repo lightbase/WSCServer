@@ -1,8 +1,8 @@
 import json
 from pyramid.response import Response
-from wscserver.model import session
+from wscserver.model import session, tmp_dir
 import zipfile
-import re
+import uuid
 from logging import getLogger
 
 FILE_BEGIN = '{"results":['
@@ -43,20 +43,24 @@ log = getLogger()
 
 
 def viewcoleta(request):
-
+    filename = tmp_dir + '/coleta-' + str(uuid.uuid4())
+    json_file = filename + '.json'
+    zip_file = filename + '.zip'
     # Please ensure this index exists on database
     # CREATE INDEX idx_id_computador ON computador_coleta(id_computador);
     if request.params.get('limit') is None:
         stmt1 = """
         SELECT id_computador
         FROM computador_coleta
-        GROUP BY id_computador;
+        GROUP BY id_computador
+        ORDER BY id_computador DESC;
         """
     else:
         stmt1 = """
             SELECT id_computador
             FROM computador_coleta
             GROUP BY id_computador
+            ORDER BY id_computador DESC
             LIMIT {};
             """.format(request.params.get('limit'))
 
@@ -73,13 +77,12 @@ def viewcoleta(request):
             INNER JOIN classe ON (classe.id_class = cp.id_class)
             LEFT JOIN proriedade_software pr ON (
               cp.id_class_property = pr.id_class_property
-              AND cc.id_computador = pr.id_computador
-              AND lower(pr.display_name) LIKE lower('%office%'))
+              AND cc.id_computador = pr.id_computador)
         WHERE cc.id_computador = {}
         AND classe.nm_class_name IN {};
         """
 
-    with open('/tmp/coleta.json', 'w') as f:
+    with open(json_file, 'w') as f:
 
         f.write(FILE_BEGIN)
 
@@ -101,20 +104,20 @@ def viewcoleta(request):
 
     if '1' in tuple(request.params.get('zip', '0')):
 
-        with zipfile.ZipFile('/tmp/coleta.zip', 'w') as myzip:
-            myzip.write('/tmp/coleta.json')
+        with zipfile.ZipFile(zip_file, 'w') as myzip:
+            myzip.write(json_file)
 
         return Response(
-           content_type='application/zip',
-           content_disposition='filename=coleta.zip',
-           body_file=open('/tmp/coleta.zip', 'rb'))
+            content_type='application/zip',
+            content_disposition='filename=coleta.zip',
+            body_file=open(zip_file, 'rb')
+        )
     else:
         return Response(
-           content_type='application/json',
-           content_disposition='filename=coleta.json',
-           body_file=open('/tmp/coleta.json'))
-
-    return Response('ok')
+            content_type='application/json',
+            content_disposition='filename=coleta.json',
+            body_file=open(json_file, 'rb')
+        )
 
 
 def build_computer_json(computer_group):
@@ -136,8 +139,9 @@ def build_computer_json(computer_group):
 
     for class_, property_, property_value, display_name in computer_group:
 
-        if class_ == 'SoftwareList'.lower():
-            if display_name is not None:
+        if class_ == 'SoftwareList':
+            if display_name is not None and \
+                    display_name.lower().find('office') > -1:
                 computer[class_.lower()].append(display_name)
             #elif property_.lower().find('microsoft') > -1:
             #    computer[class_].append(property_)

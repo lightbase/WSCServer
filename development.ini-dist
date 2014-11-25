@@ -10,6 +10,7 @@ pyramid.includes =
     pyramid_tm
 
 sqlalchemy.url = postgresql://cacic:cacic@localhost/cacic
+tmp_dir = /tmp
 
 [server:main]
 use = egg:waitress#main
@@ -20,7 +21,7 @@ port = 6543
 keys = root, wscserver, sqlalchemy
 
 [handlers]
-keys = console
+keys = console, file
 
 [formatters]
 keys = generic
@@ -43,6 +44,12 @@ qualname = sqlalchemy.engine
 class = StreamHandler
 args = (sys.stderr,)
 level = NOTSET
+formatter = generic
+
+[handler_file]
+class = FileHandler
+args = ('%(here)s/wscserver.log',)
+level = DEBUG
 formatter = generic
 
 [formatter_generic]
