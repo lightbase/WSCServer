@@ -71,9 +71,12 @@ def viewcoleta(request):
             INNER JOIN class_property as cp ON (cc.id_class_property =
                 cp.id_class_property)
             INNER JOIN classe ON (classe.id_class = cp.id_class)
-            LEFT JOIN proriedade_software pr ON (cp.id_class_property = pr.id_class_property AND cc.id_computador = pr.id_computador)
-        WHERE cc.id_computador = {} AND
-            classe.nm_class_name IN {};
+            LEFT JOIN proriedade_software pr ON (
+              cp.id_class_property = pr.id_class_property
+              AND cc.id_computador = pr.id_computador
+              AND lower(pr.display_name) LIKE lower('%office%'))
+        WHERE cc.id_computador = {}
+        AND classe.nm_class_name IN {};
         """
 
     with open('/tmp/coleta.json', 'w') as f:
@@ -134,7 +137,7 @@ def build_computer_json(computer_group):
     for class_, property_, property_value, display_name in computer_group:
 
         if class_ == 'SoftwareList'.lower():
-            if display_name.lower().find('office') > -1:
+            if display_name is not None:
                 computer[class_.lower()].append(display_name)
             #elif property_.lower().find('microsoft') > -1:
             #    computer[class_].append(property_)
