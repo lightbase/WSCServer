@@ -11,28 +11,28 @@ FILE_END = '], "result_count": %s}'
 # Computer class and properties filters
 COMPUTER_FILTER = {
     "OperatingSystem": [
-        "Caption",
-        "Version",
-        "InstallDate"
+        "Caption".lower(),
+        "Version".lower(),
+        "InstallDate".lower()
     ],
     "Win32_Processor": [
-        "Manufacturer",
-        "Caption",
-        "NumberOfLogicalProcessors",
-        "MaxClockSpeed",
-        "Family"
+        "Manufacturer".lower(),
+        "Caption".lower(),
+        "NumberOfLogicalProcessors".lower(),
+        "MaxClockSpeed".lower(),
+        "Family".lower()
     ],
     "Win32_BIOS": [
-        "Manufacturer",
+        "Manufacturer".lower(),
     ],
     "Win32_PhysicalMemory": [
-        "MemoryType",
-        "Capacity"
+        "MemoryType".lower(),
+        "Capacity".lower()
     ],
     "Win32_LogicalDisk": [
-        "Caption",
-        "MediaType",
-        "Size"
+        "Caption".lower(),
+        "MediaType".lower(),
+        "Size".lower()
     ],
     "SoftwareList": []
 }
@@ -133,8 +133,8 @@ def build_computer_json(computer_group):
 
     # FIXME: Arrumar uma forma melhor de definir os atributos que devem ser somados
     somar = [
-        "NumberOfLogicalProcessors",
-        "Capacity"
+        "NumberOfLogicalProcessors".lower(),
+        "Capacity".lower()
     ]
 
     for class_, property_, property_value, display_name in computer_group:
@@ -147,7 +147,7 @@ def build_computer_json(computer_group):
             #    computer[class_].append(property_)
             continue
 
-        elif property_ not in COMPUTER_FILTER[class_]:
+        elif property_.lower() not in COMPUTER_FILTER[class_]:
             continue
 
         else:
@@ -159,7 +159,7 @@ def build_computer_json(computer_group):
                 saida = int()
                 for value in p:
                     if value.isdigit():
-                        if property_ in somar:
+                        if property_.lower() in somar:
                             log.debug(value)
                             saida += int(value)
                         else:
