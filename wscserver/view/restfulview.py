@@ -161,6 +161,7 @@ def build_computer_json(computer_group):
                 for value in p:
                     # Corrige erro do campo bytes
                     value = value.strip("bytes").strip()
+                    value = value.strip("Hz").strip()
                     if value.isdigit():
                         if property_.lower() in somar:
                             log.debug(value)
