@@ -29,9 +29,9 @@ COMPUTER_FILTER = {
         "MemoryType".lower(),
         "Capacity".lower()
     ],
-    "Win32_LogicalDisk": [
+    "Win32_DiskDrive": [
         "Caption".lower(),
-        "MediaType".lower(),
+        "Model".lower(),
         "Size".lower()
     ],
     "SoftwareList": []
@@ -127,7 +127,7 @@ def build_computer_json(computer_group):
         "Win32_Processor".lower(): {},
         "Win32_BIOS".lower(): {},
         "Win32_PhysicalMemory".lower(): {},
-        "Win32_LogicalDisk".lower(): {},
+        "Win32_DiskDrive".lower(): {},
         "SoftwareList".lower(): []
     }
 
