@@ -134,7 +134,8 @@ def build_computer_json(computer_group):
     # FIXME: Arrumar uma forma melhor de definir os atributos que devem ser somados
     somar = [
         "NumberOfLogicalProcessors".lower(),
-        "Capacity".lower()
+        "Capacity".lower(),
+        "Size".lower()
     ]
 
     for class_, property_, property_value, display_name in computer_group:
@@ -158,6 +159,8 @@ def build_computer_json(computer_group):
             if type(p) == list and len(p) > 0:
                 saida = int()
                 for value in p:
+                    # Corrige erro do campo bytes
+                    value = value.strip("bytes").strip()
                     if value.isdigit():
                         if property_.lower() in somar:
                             log.debug(value)
