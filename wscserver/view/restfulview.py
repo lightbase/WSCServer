@@ -3,6 +3,7 @@ from pyramid.response import Response
 from wscserver.model import session, tmp_dir
 import zipfile
 import uuid
+import hashlib
 from logging import getLogger
 
 FILE_BEGIN = '{"results":['
@@ -67,10 +68,12 @@ def viewcoleta(request):
     computer_ids = session.execute(stmt1)
 
     stmt2 = """
-        SELECT classe.nm_class_name,
+        SELECT cc.id_computador,
+               classe.nm_class_name,
                cp.nm_property_name,
                cc.te_class_property_value,
-               pr.display_name
+               pr.display_name,
+               cc.dt_hr_inclusao as data_coleta
         FROM computador_coleta AS cc
             INNER JOIN class_property as cp ON (cc.id_class_property =
                 cp.id_class_property)
@@ -138,7 +141,20 @@ def build_computer_json(computer_group):
         "Size".lower()
     ]
 
-    for class_, property_, property_value, display_name in computer_group:
+    for id_computador, class_, property_, property_value, display_name, data_coleta in computer_group:
+
+        # Gera um hash para o id_computador
+        salt = str('salthere').encode('utf-8')
+        id_reg = str(id_computador).encode('utf-8')
+        id_reg = hashlib.sha512(id_reg)
+        id_reg.update(salt)
+        id_reg = id_reg.hexdigest()
+
+        # Adiciona um hash para cada computador
+        computer['hash_machine'] = id_reg
+
+        # Data da coleta
+        computer['data_coleta'] = data_coleta.strftime("%d/%m/%Y %H:%M:%S")
 
         if class_ == 'SoftwareList':
             if display_name is not None and \
