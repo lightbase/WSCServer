@@ -73,8 +73,10 @@ def viewcoleta(request):
                cp.nm_property_name,
                cc.te_class_property_value,
                pr.display_name,
-               cc.dt_hr_inclusao as data_coleta
+               cc.dt_hr_inclusao as data_coleta,
+               c.dt_hr_ult_acesso as data_ultimo_acesso
         FROM computador_coleta AS cc
+            INNER JOIN computador c ON cc.id_computador = c.id_computador
             INNER JOIN class_property as cp ON (cc.id_class_property =
                 cp.id_class_property)
             INNER JOIN classe ON (classe.id_class = cp.id_class)
@@ -141,7 +143,7 @@ def build_computer_json(computer_group):
         "Size".lower()
     ]
 
-    for id_computador, class_, property_, property_value, display_name, data_coleta in computer_group:
+    for id_computador, class_, property_, property_value, display_name, data_coleta, data_ultimo_acesso in computer_group:
 
         # Gera um hash para o id_computador
         salt = str('salthere').encode('utf-8')
@@ -155,6 +157,7 @@ def build_computer_json(computer_group):
 
         # Data da coleta
         computer['data_coleta'] = data_coleta.strftime("%d/%m/%Y %H:%M:%S")
+        computer['data_ultimo_acesso'] = data_ultimo_acesso.strftime("%d/%m/%Y %H:%M:%S")
 
         if class_ == 'SoftwareList':
             if display_name is not None and \
