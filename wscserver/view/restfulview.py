@@ -51,17 +51,19 @@ def viewcoleta(request):
     # CREATE INDEX idx_id_computador ON computador_coleta(id_computador);
     if request.params.get('limit') is None:
         stmt1 = """
-        SELECT id_computador
-        FROM computador_coleta
-        GROUP BY id_computador
-        ORDER BY id_computador DESC;
+        SELECT DISTINCT cl.id_computador
+        FROM computador_coleta cl
+        INNER JOIN computador c ON cl.id_computador = c.id_computador
+        WHERE (c.ativo IS NULL or c.ativo = 't')
+        ORDER BY cl.id_computador DESC;
         """
     else:
         stmt1 = """
-            SELECT id_computador
-            FROM computador_coleta
-            GROUP BY id_computador
-            ORDER BY id_computador DESC
+            SELECT DISTINCT cl.id_computador
+            FROM computador_coleta cl
+            INNER JOIN computador c ON cl.id_computador = c.id_computador
+            WHERE (c.ativo IS NULL or c.ativo = 't')
+            ORDER BY cl.id_computador DESC
             LIMIT {};
             """.format(request.params.get('limit'))
 
