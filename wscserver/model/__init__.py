@@ -15,6 +15,7 @@ def initialize_sql(settings):
     global Session
     global session
     global tmp_dir
+    global extended
 
     sqlalchemy_url = settings['sqlalchemy.url']
     DBSession = scoped_session(sessionmaker())
@@ -23,6 +24,12 @@ def initialize_sql(settings):
     Session = sessionmaker(bind=engine)
     session = Session()
     tmp_dir = settings['tmp_dir']
+
+    # Extended attributes
+    if settings['extended'] == 'true':
+        extended = True
+    else:
+        extended = False
 
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine

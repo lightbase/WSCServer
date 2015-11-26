@@ -12,6 +12,10 @@ pyramid.includes =
 sqlalchemy.url = postgresql://cacic:cacic@localhost/cacic
 tmp_dir = /tmp
 
+# Jansen: 2015-11-26
+# Coleta estendida com mais atributos
+extended = true
+
 [server:main]
 use = egg:waitress#main
 host = 0.0.0.0

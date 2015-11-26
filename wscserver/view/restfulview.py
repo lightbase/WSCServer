@@ -1,10 +1,14 @@
+#!/usr/env python
+# -*- coding: utf-8 -*-
+import logging
 import json
 from pyramid.response import Response
-from wscserver.model import session, tmp_dir
+from ..model import session, tmp_dir, extended
 import zipfile
 import uuid
 import hashlib
-from logging import getLogger
+
+log = logging.getLogger()
 
 FILE_BEGIN = '{"results":['
 FILE_END = '], "result_count": %s}'
@@ -38,10 +42,18 @@ COMPUTER_FILTER = {
     "SoftwareList": []
 }
 
+
+# Adição Jansen: 2015-1126
+# Adiciona atributos da coleta estendida
+if extended:
+    COMPUTER_FILTER['Win32_BaseBoard'] = ["InstallDate".lower()]
+    COMPUTER_FILTER['Win32_BIOS'].append("InstallDate".lower())
+    COMPUTER_FILTER['Win32_BIOS'].append("ReleaseDate".lower())
+    COMPUTER_FILTER['Win32_Processor'].append("InstallDate".lower())
+
+log.debug(COMPUTER_FILTER)
+
 FILTER_KEYS = str(tuple(COMPUTER_FILTER.keys()))
-
-log = getLogger()
-
 
 def viewcoleta(request):
     filename = tmp_dir + '/coleta-' + str(uuid.uuid4())
@@ -76,9 +88,14 @@ def viewcoleta(request):
                cc.te_class_property_value,
                pr.display_name,
                cc.dt_hr_inclusao as data_coleta,
-               c.dt_hr_ult_acesso as data_ultimo_acesso
+               c.dt_hr_ult_acesso as data_ultimo_acesso,
+               c.te_node_address as mac,
+               c.te_ip_computador as ip_computador,
+               r.te_ip_rede as ip_rede,
+               r.nm_rede as nome_rede
         FROM computador_coleta AS cc
             INNER JOIN computador c ON cc.id_computador = c.id_computador
+            INNER JOIN rede r ON c.id_rede = r.id_rede
             INNER JOIN class_property as cp ON (cc.id_class_property =
                 cp.id_class_property)
             INNER JOIN classe ON (classe.id_class = cp.id_class)
@@ -138,6 +155,11 @@ def build_computer_json(computer_group):
         "SoftwareList".lower(): []
     }
 
+    # Jansen: 2015-11-26
+    # Adiciona atributos extras
+    if extended:
+        computer['Win32_BaseBoard'.lower()] = {}
+
     # FIXME: Arrumar uma forma melhor de definir os atributos que devem ser somados
     somar = [
         "NumberOfLogicalProcessors".lower(),
@@ -145,7 +167,8 @@ def build_computer_json(computer_group):
         "Size".lower()
     ]
 
-    for id_computador, class_, property_, property_value, display_name, data_coleta, data_ultimo_acesso in computer_group:
+    for id_computador, class_, property_, property_value, display_name, data_coleta, \
+        data_ultimo_acesso, mac, ip_computador, ip_rede, nome_rede in computer_group:
 
         # Gera um hash para o id_computador
         salt = str('salthere').encode('utf-8')
@@ -160,6 +183,14 @@ def build_computer_json(computer_group):
         # Data da coleta
         computer['data_coleta'] = data_coleta.strftime("%d/%m/%Y %H:%M:%S")
         computer['data_ultimo_acesso'] = data_ultimo_acesso.strftime("%d/%m/%Y %H:%M:%S")
+
+        # Jansen: 2015-11-26
+        # Adiciona atributos extras
+        if extended:
+            computer['mac'] = mac
+            computer['ip_computador'] = ip_computador
+            computer['ip_rede'] = ip_rede
+            computer['nome_rede'] = nome_rede
 
         if class_ == 'SoftwareList':
             if display_name is not None and \
