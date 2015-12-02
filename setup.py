@@ -22,7 +22,7 @@ requires = [
 ]
 
 setup(name='WSCServer',
-      version='1.1.2b4',
+      version='1.1.2b5',
       description='WSCServer',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
